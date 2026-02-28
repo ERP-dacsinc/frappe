@@ -383,6 +383,16 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 				// hide link arrow to doctype if none is set
 				me.$link.toggle(false);
 			}
+
+			const dropdown = this.awesomplete.ul;
+			const dropdownRect = dropdown.getBoundingClientRect();
+			const viewportWidth = window.innerWidth;
+
+			if (dropdownRect.right > viewportWidth) {
+				dropdown.classList.add("awesomplete-align-right");
+			} else {
+				dropdown.classList.remove("awesomplete-align-right");
+			}
 		});
 
 		this.$input.on("awesomplete-close", (e) => {
@@ -447,7 +457,9 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 			if (newArr.length === 0) return [currElem];
 			let element_with_same_value = newArr.find((e) => e.value === currElem.value);
 			if (element_with_same_value) {
-				element_with_same_value.description += `, ${currElem.description}`;
+				if (currElem.description) {
+					element_with_same_value.description += `, ${currElem.description}`;
+				}
 				return [...newArr];
 			}
 			return [...newArr, currElem];
@@ -509,10 +521,16 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 				filter[3].push("...");
 			}
 
-			let value =
-				filter[3] == null || filter[3] === "" ? __("empty") : String(__(filter[3]));
+			let value;
+			if (filter[3] && Array.isArray(filter[3])) {
+				value = filter[3].map((v) => String(__(v)).bold()).join(", ");
+			} else if (filter[3] == null || filter[3] === "") {
+				value = __("empty").bold();
+			} else {
+				value = String(__(filter[3])).bold();
+			}
 
-			return [__(label).bold(), __(filter[2]), value.bold()].join(" ");
+			return [__(label).bold(), __(filter[2]), value].join(" ");
 		}
 
 		let filter_string = filter_array.map(get_filter_description).join(", ");
@@ -737,6 +755,7 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 					"Float",
 					"Int",
 					"Date",
+					"Datetime",
 					"Select",
 					"Duration",
 					"Time",
